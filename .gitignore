@@ -21,7 +21,8 @@ wheels/
 *.egg
 
 # Virtual Environment
-.venv/
+.env
+.venv
 venv/
 ENV/
 
@@ -33,7 +34,7 @@ secrets.json
 credentials.json
 api_keys.json
 
-# Twitter cookies and tokens
+# Twitter cookies and session data
 cookies.json
 *.token
 *.session
@@ -52,4 +53,11 @@ cookies.json
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Model files
+cardiffnlp/
+*.safetensors
+*.bin
+*.pt
+*.pth 
