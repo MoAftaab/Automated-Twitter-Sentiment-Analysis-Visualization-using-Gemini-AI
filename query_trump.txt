@@ -1,0 +1,1 @@
+(from:WhiteHouse OR from:TrumpDailyPosts OR from:realDonaldTrump) since:2025-04-09

@@ -1,0 +1,12 @@
+torch
+protobuf
+sentencepiece
+transformers
+googletrans
+twikit==1.7.6
+openai
+python-dotenv
+pandas
+matplotlib
+seaborn
+emoji
