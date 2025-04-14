@@ -90,11 +90,11 @@ def main():
     
     # Define workflow steps with their expected output patterns
     workflow_steps = [
-        ("Twitter Scraping", "scrape.py", "tweets_*.csv"),
-        ("Tweet Cleaning", "clean_tweets.py", "cleaned_tweets.csv"),
-        ("GPT Analysis", "gpt_summary.py", "senti_labels.csv"),
-        ("Data Analysis", "create_analysis.py", "data_analysis.csv"),
-        ("Data Visualization", "data_viz.py", "sentiment_analysis.png")
+        ("Twitter Scraping", "01_scrape_tweets.py", "01_tweets_*.csv"),
+        ("Tweet Cleaning", "02_clean_tweets.py", "02_cleaned_tweets.csv"),
+        ("GPT Analysis", "03_analyze_sentiment.py", "03_sentiment_labels.csv"),
+        ("Data Analysis", "04_create_analysis.py", "04_data_analysis.csv"),
+        ("Data Visualization", "05_generate_visualization.py", "05_sentiment_analysis.png")
     ]
     
     # Step 0: Install requirements only if starting from step 1 and not explicitly skipped
@@ -118,10 +118,24 @@ def main():
         # Run workflow steps
         for i, (step_name, script_name, output_pattern) in enumerate(workflow_steps, 1):
             if i >= args.start_step:  # Only run steps from the specified starting point
-                # Add query file argument for scrape.py if provided
+                # For the first step (scraping), handle query file selection
                 step_args = []
-                if i == 1 and args.query_file:  # First step is scrape.py
-                    step_args = ['--query-file', args.query_file]
+                if i == 1:  # First step is scrape.py
+                    if args.query_file:
+                        step_args = ['--query-file', args.query_file]
+                    else:
+                        print("\nNo query file specified. Please select a query file:")
+                        # Run the script directly without capturing output to show interactive menu
+                        query_selection = subprocess.run([sys.executable, script_name])
+                        if query_selection.returncode != 0:
+                            raise Exception("Failed to select query file")
+                        # After selection, get the selected file
+                        selected_file = glob.glob('01_tweets_*.csv')[-1] if glob.glob('01_tweets_*.csv') else None
+                        if not selected_file:
+                            raise Exception("No query file was selected")
+                        print(f"\nContinuing with selected query file...")
+                        # Skip running the step again since we already ran it
+                        continue
                 
                 if not run_step(step_name, script_name, args=step_args):
                     raise Exception(f"Failed at {step_name}")

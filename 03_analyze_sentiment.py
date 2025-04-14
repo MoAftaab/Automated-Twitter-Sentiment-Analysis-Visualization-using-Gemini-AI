@@ -5,6 +5,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import emoji
 import sys
+import glob
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -31,8 +32,8 @@ def get_tweet_texts(csv_filename):
         print(f"CSV Headers: {headers}")  # Print headers for debugging
         
         # Determine column indices based on headers
-        id_col = 0  # Default to first column as ID
-        text_col = 1  # Default to second column as text
+        id_col = 0  # Tweet_count is first column
+        text_col = 2  # Text is third column
         
         for row in csv_reader:
             if row and len(row) > max(id_col, text_col):  # Ensure row has enough columns
@@ -155,7 +156,7 @@ def save_to_json(analysis_result, json_filename='gpt_analysis.json'):
         print(f"Analysis result that caused error: {analysis_result}")
         return False
 
-def convert_json_to_csv(json_filename='gpt_analysis.json', csv_filename='senti_labels.csv'):
+def convert_json_to_csv(json_filename='gpt_analysis.json', csv_filename='03_sentiment_labels.csv'):
     """
     Converts the JSON analysis results to CSV format
     """
@@ -191,17 +192,28 @@ def convert_json_to_csv(json_filename='gpt_analysis.json', csv_filename='senti_l
         return False
 
 def main():
-    csv_filename = 'cleaned_tweets.csv'
-    json_filename = 'gpt_analysis.json'
-    csv_output_filename = 'senti_labels.csv'
+    # Find the most recent cleaned tweets file
+    cleaned_files = glob.glob('02_cleaned_tweets.csv')
+    if not cleaned_files:
+        print("No cleaned tweets file found. Please run the cleaning step first.")
+        return 1
     
-    # Initialize empty JSON file if it doesn't exist
-    if not os.path.exists(json_filename):
-        with open(json_filename, 'w', encoding='utf-8') as file:
-            json.dump([], file)
+    input_file = cleaned_files[0]  # There should only be one
+    output_file = '03_sentiment_labels.csv'
+    
+    print(f"Processing {input_file}...")
+    
+    # Initialize empty JSON file (overwrite if exists)
+    with open('gpt_analysis.json', 'w', encoding='utf-8') as file:
+        json.dump([], file)
+    
+    # Clear the output CSV file
+    with open(output_file, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['id', 'score', 'explanation'])  # Write header
     
     # Read tweets from the CSV file
-    tweets = get_tweet_texts(csv_filename)
+    tweets = get_tweet_texts(input_file)
     print(f"\nTotal tweets to process: {len(tweets)}")
     
     # Process tweets one by one
@@ -209,7 +221,7 @@ def main():
     for i, (tweet_id, tweet_text) in enumerate(tweets, 1):
         print(f"\nProcessing tweet {i}/{len(tweets)} (ID: {tweet_id})")
         analysis = get_insights_from_gpt(tweet_id, tweet_text)
-        if analysis and save_to_json(analysis, json_filename):
+        if analysis and save_to_json(analysis):
             success_count += 1
             print(f"Successfully processed tweet {tweet_id}")
         else:
@@ -219,9 +231,11 @@ def main():
     
     # Convert JSON to CSV at the end
     if success_count > 0:
-        convert_json_to_csv(json_filename, csv_output_filename)
+        convert_json_to_csv()
     else:
         print("No successful analyses to convert to CSV")
+    
+    return 0
 
 if __name__ == "__main__":
     main()

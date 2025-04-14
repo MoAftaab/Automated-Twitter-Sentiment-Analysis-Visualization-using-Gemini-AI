@@ -2,6 +2,8 @@ import pandas as pd
 import re
 import emoji
 import sys
+import glob
+import os
 
 def clean_text(text):
     """Clean tweet text by removing URLs, mentions, emojis, and special characters"""
@@ -33,14 +35,25 @@ def clean_text(text):
     return text
 
 def main():
+    # Find the most recent tweets file
+    tweet_files = glob.glob('01_tweets_*.csv')
+    if not tweet_files:
+        print("No tweet files found. Please run the scraping step first.")
+        return 1
+    
+    input_file = max(tweet_files, key=os.path.getctime)
+    output_file = '02_cleaned_tweets.csv'
+    
+    print(f"Processing {input_file}...")
+    
     print("Loading tweets.csv...")
     try:
         # Read CSV with UTF-8 encoding
-        df = pd.read_csv('tweets.csv', encoding='utf-8')
+        df = pd.read_csv(input_file, encoding='utf-8')
     except UnicodeDecodeError:
         # If UTF-8 fails, try with different encoding
         print("UTF-8 encoding failed, trying with ISO-8859-1...")
-        df = pd.read_csv('tweets.csv', encoding='ISO-8859-1')
+        df = pd.read_csv(input_file, encoding='ISO-8859-1')
     except FileNotFoundError:
         print("Error: tweets.csv not found!")
         return 1
@@ -58,7 +71,7 @@ def main():
     
     try:
         # Save to cleaned_tweets.csv with UTF-8 encoding
-        df.to_csv('cleaned_tweets.csv', index=False, encoding='utf-8')
+        df.to_csv(output_file, index=False, encoding='utf-8')
         print("Successfully saved cleaned_tweets.csv")
     except Exception as e:
         print(f"Error saving file: {str(e)}")

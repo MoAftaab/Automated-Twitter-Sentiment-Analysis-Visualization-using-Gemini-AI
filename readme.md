@@ -2,6 +2,13 @@
 
 This project provides a complete pipeline for scraping tweets, cleaning them, analyzing sentiment using GPT-4, and visualizing the results.
 
+## ⚠️ Security Notice
+
+- Never commit your API keys or sensitive credentials to the repository
+- Use `.env` file for storing sensitive information
+- The repository includes `.gitignore` to prevent accidental commits of sensitive files
+- Copy `.env.example` to `.env` and fill in your own values
+
 ## Features
 
 - Twitter scraping using twikit
@@ -40,10 +47,25 @@ pip install -r requirements.txt
 ```
 
 4. Set up environment variables:
-Create a `.env` file with:
+```bash
+# Copy the example environment file
+cp .env.example .env
+# Edit .env with your actual values
+# NEVER commit .env to the repository
 ```
-OPENAI_API_KEY=your_openai_api_key
+
+5. Set up Twitter authentication:
+```bash
+# Create a config.ini file with your Twitter credentials:
+# [X]
+# username = your_twitter_username
+# email = your_twitter_email
+# password = your_twitter_password
+
+# Run the authentication script
+python 00_setup_auth.py
 ```
+This will generate a `cookies.json` file that the scraper will use for authentication.
 
 ## Usage
 
@@ -57,32 +79,32 @@ python main.py
 
 1. Scrape tweets:
 ```bash
-python scrape.py --query-file query_grocery.txt
+python 01_scrape_tweets.py --query-file query_grocery.txt
 ```
 
 2. Clean tweets:
 ```bash
-python clean_tweets.py
+python 02_clean_tweets.py
 ```
 
 3. Analyze sentiment:
 ```bash
-python gpt_summary.py
+python 03_analyze_sentiment.py
 ```
 
 4. Create analysis:
 ```bash
-python create_analysis.py
+python 04_create_analysis.py
 ```
 
 5. Generate visualization:
 ```bash
-python data_viz.py
+python 05_generate_visualization.py
 ```
 
 ### Command Line Options
 
-- `--start-step`: Start from a specific step (1-5)
+- `--start-step x`: Start from a specific step (1-5)
 - `--skip-requirements`: Skip installing requirements
 - `--query-file`: Specify which query file to use
 
@@ -90,16 +112,27 @@ python data_viz.py
 
 ```
 .
-├── main.py              # Main workflow controller
-├── scrape.py            # Twitter scraping module
-├── clean_tweets.py      # Tweet cleaning module
-├── gpt_summary.py       # GPT-4 sentiment analysis
-├── create_analysis.py   # Data analysis module
-├── data_viz.py          # Visualization module
-├── query_*.txt          # Query files
-├── requirements.txt     # Project dependencies
-└── README.md            # Project documentation
+├── main.py                      # Main workflow controller
+├── 00_setup_auth.py             # Twitter authentication
+├── 01_scrape_tweets.py          # Twitter scraping module
+├── 02_clean_tweets.py           # Tweet cleaning module
+├── 03_analyze_sentiment.py      # GPT-4 sentiment analysis
+├── 04_create_analysis.py        # Data analysis module
+├── 05_generate_visualization.py # Visualization module
+├── query_*.txt                  # Query files
+├── requirements.txt             # Project dependencies
+├── .env.example                 # Example environment variables
+└── README.md                    # Project documentation
 ```
+
+## Output Files
+
+The pipeline generates the following files in sequence:
+1. `01_tweets_*.csv` - Raw scraped tweets
+2. `02_cleaned_tweets.csv` - Cleaned and processed tweets
+3. `03_sentiment_labels.csv` - GPT-4 sentiment analysis results
+4. `04_data_analysis.csv` - Combined analysis data
+5. `05_sentiment_analysis.png` - Visualization of results
 
 ## Contributing
 

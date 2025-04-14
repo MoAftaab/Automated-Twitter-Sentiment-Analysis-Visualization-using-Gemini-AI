@@ -1,9 +1,4 @@
-torch
-protobuf
-sentencepiece
-transformers
-googletrans
-twikit==1.7.6
+twikit
 openai
 python-dotenv
 pandas

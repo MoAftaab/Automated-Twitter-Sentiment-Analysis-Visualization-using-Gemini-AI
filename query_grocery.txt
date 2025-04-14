@@ -1,1 +1,1 @@
-food price, grocery price min_faves:100 since:2025-01-01 
+grocery price, grocery prices (#groceryprice OR #groceryprices) min_faves:1 since:2025-01-01

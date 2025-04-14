@@ -33,6 +33,7 @@ ENV/
 secrets.json
 credentials.json
 api_keys.json
+config.ini
 
 # Twitter cookies and session data
 cookies.json

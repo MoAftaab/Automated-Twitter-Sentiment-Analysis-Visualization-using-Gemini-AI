@@ -76,7 +76,7 @@ async def main():
         return
 
     # Create CSV file with UTF-8 encoding
-    output_file = f"tweets_{os.path.splitext(query_file)[0]}.csv"
+    output_file = f"01_tweets_{os.path.splitext(query_file)[0]}.csv"
     with open(output_file, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['Tweet_count', 'Username', 'Text', 'Created At', 'Retweets', 'Likes'])
@@ -84,12 +84,22 @@ async def main():
     # Search for tweets
     try:
         tweet_count = 0
+        print(f"\nSearching for tweets with query: {QUERY}")
+        print("This may take a moment...")
+        
         tweets = await client.search_tweet(QUERY, product='Top')
+        if not tweets:
+            print("No tweets found for this query. Try a different query or check your search terms.")
+            return
+            
+        print(f"\nStarting tweet collection...")
+        print(f"Target: {MINIMUM_TWEETS} tweets")
 
         while tweet_count < MINIMUM_TWEETS and tweets:
+            print(f"\nProcessing batch of tweets...")
             for tweet in tweets:
-                # Add random delay between processing each tweet (1-3 seconds)
-                await asyncio.sleep(random.uniform(1, 3))
+                # Add random delay between processing each tweet (1-2 seconds)
+                await asyncio.sleep(random.uniform(1, 2))
 
                 tweet_count += 1
 
@@ -114,26 +124,32 @@ async def main():
                     writer = csv.writer(file)
                     writer.writerow(tweet_data)
 
-                print(f"Added tweet {tweet_count}")
+                # Show progress
+                progress = (tweet_count / MINIMUM_TWEETS) * 100
+                print(f"\rProgress: {tweet_count}/{MINIMUM_TWEETS} tweets ({progress:.1f}%) - Latest: {clean_username(tweet.user.name)}", end="")
 
                 if tweet_count >= MINIMUM_TWEETS:
                     break
 
             if tweet_count < MINIMUM_TWEETS:
-                print(f"Got {tweet_count} tweets so far. Getting more...")
+                print(f"\nGot {tweet_count} tweets so far. Getting more...")
                 # Add longer random delay between batches (3-7 seconds)
                 await asyncio.sleep(random.uniform(3, 7))
+                print("Fetching next batch of tweets...")
                 tweets = await tweets.next()
+                if not tweets:
+                    print("\nNo more tweets available for this query.")
+                    break
 
-        print(f"\nDone! Collected {tweet_count} tweets in total.")
+        print(f"\n\nDone! Collected {tweet_count} tweets in total.")
         print(f"Results saved to: {output_file}")
 
     except TooManyRequests:
-        print("Error: Rate limit exceeded. Please wait and try again later.")
+        print("\nError: Rate limit exceeded. Please wait and try again later.")
     except Forbidden:
-        print("Error: Access forbidden. Your cookies might be invalid or expired.")
+        print("\nError: Access forbidden. Your cookies might be invalid or expired.")
     except Exception as e:
-        print(f"Error: {type(e).__name__}: {str(e)}")
+        print(f"\nError: {type(e).__name__}: {str(e)}")
 
 def clean_username(text):
     """Clean username text to avoid encoding issues"""
@@ -146,5 +162,5 @@ def clean_username(text):
         return "[Username contains unsupported characters]"
 
 if __name__ == "__main__":
-    MINIMUM_TWEETS = 500
+    MINIMUM_TWEETS = 20
     asyncio.run(main())
