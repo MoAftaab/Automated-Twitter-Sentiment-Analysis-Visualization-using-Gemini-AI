@@ -21,30 +21,35 @@ wheels/
 *.egg
 
 # Virtual Environment
-.env
-.venv
+.venv/
 venv/
 ENV/
+env/
 
-# Environment variables and secrets
+# Environment variables
 .env
 .env.*
-!.env.example
 secrets.json
 credentials.json
 api_keys.json
-config.ini
 
-# Twitter cookies and session data
+# Twitter cookies
 cookies.json
 *.token
 *.session
 
 # Data files
 *.csv
-*.png
 *.json
-!requirements.json
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.xlsx
+*.xls
+*.db
+*.sqlite3
 
 # IDE
 .idea/
