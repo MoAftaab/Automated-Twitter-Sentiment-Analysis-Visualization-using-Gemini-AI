@@ -66,4 +66,19 @@ cardiffnlp/
 *.safetensors
 *.bin
 *.pt
+*.pth
+
+# Hugging Face
+.cache/huggingface/
+transformers/
+*.model
+*.onnx
+*.h5
+*.ckpt
+
+# Model files
+cardiffnlp/
+*.safetensors
+*.bin
+*.pt
 *.pth 
