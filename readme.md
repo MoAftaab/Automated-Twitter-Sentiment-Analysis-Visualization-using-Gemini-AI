@@ -226,7 +226,6 @@ Gemini AI analyzes each tweet on a **1-5 scale**:
 ### Gemini API Limits (Free Tier)
 
 - **15 requests per minute**
-- **50 requests per day**
 - **Automatic delays**: 4 seconds between requests
 - **Upgrade**: For larger datasets, consider paid plan
 
