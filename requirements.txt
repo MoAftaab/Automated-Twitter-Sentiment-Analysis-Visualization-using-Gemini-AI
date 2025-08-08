@@ -1,7 +1,8 @@
 twikit
-openai
+google-generativeai
 python-dotenv
 pandas
 matplotlib
 seaborn
 emoji
+tqdm

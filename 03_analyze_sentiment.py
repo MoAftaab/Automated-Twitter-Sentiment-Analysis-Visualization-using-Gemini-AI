@@ -1,17 +1,20 @@
 import os
 import csv
 import json
-from openai import OpenAI
+import google.generativeai as genai
 from dotenv import load_dotenv
 import emoji
 import sys
 import glob
+import time
+from tqdm import tqdm
 
 # Load environment variables from the .env file
-load_dotenv()
+load_dotenv(dotenv_path='api_keys.env')
 
-# Ensure your API key is set as an environment variable
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Configure Gemini API
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Set console encoding to UTF-8 on Windows
 if sys.platform == 'win32':
@@ -42,9 +45,10 @@ def get_tweet_texts(csv_filename):
     print(f"Loaded {len(tweets)} tweets from CSV")
     return tweets
 
-def get_insights_from_gpt(tweet_id, tweet_text):
+def get_insights_from_gemini(tweet_id, tweet_text):
     """
-    Sends a single tweet to GPT-4 (gpt-4o) to analyze and generate insights.
+    Sends a single tweet to Google Gemini AI to analyze and generate sentiment insights.
+    Uses Gemini-1.5-flash model for fast and accurate sentiment classification.
     """
     print(f"\nAnalyzing tweet {tweet_id}:")
     # Remove emojis and clean text for display
@@ -75,23 +79,17 @@ Here is the tweet: {tweet_text}
     """
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a senior social media sentiment analyst. Your task is to evaluate tweets about food prices and classify it on a satisfaction scale for news reporting."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        result = response.choices[0].message.content
-        print(f"GPT Response: {result}")
+        response = model.generate_content(prompt)
+        result = response.text
+        print(f"Gemini Response: {result}")
         return result
     except Exception as e:
-        print(f"Error calling OpenAI API: {str(e)}")
+        print(f"Error calling Gemini API: {str(e)}")
         return None
 
 def clean_json_response(response):
     """
-    Cleans the GPT response by removing markdown formatting
+    Cleans the Gemini response by removing markdown formatting
     """
     if not response:
         return None
@@ -99,13 +97,21 @@ def clean_json_response(response):
     # Remove markdown code block formatting if present
     if response.startswith('```json'):
         response = response[7:]  # Remove ```json
-    if response.startswith('```'):
+    elif response.startswith('```'):
         response = response[3:]  # Remove ```
+    
     if response.endswith('```'):
         response = response[:-3]  # Remove ```
     
-    # Remove any leading/trailing whitespace
+    # Remove any leading/trailing whitespace and newlines
     response = response.strip()
+    
+    # Find the JSON object within the response
+    start_idx = response.find('{')
+    end_idx = response.rfind('}')
+    
+    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+        response = response[start_idx:end_idx+1]
     
     return response
 
@@ -201,6 +207,9 @@ def main():
     input_file = cleaned_files[0]  # There should only be one
     output_file = '03_sentiment_labels.csv'
     
+    print(f"📊 Using dataset: {input_file}")
+    print(f"💾 Output will be saved to: {output_file}")
+    
     print(f"Processing {input_file}...")
     
     # Initialize empty JSON file (overwrite if exists)
@@ -216,16 +225,28 @@ def main():
     tweets = get_tweet_texts(input_file)
     print(f"\nTotal tweets to process: {len(tweets)}")
     
-    # Process tweets one by one
+    # Process tweets one by one with progress bar
     success_count = 0
-    for i, (tweet_id, tweet_text) in enumerate(tweets, 1):
-        print(f"\nProcessing tweet {i}/{len(tweets)} (ID: {tweet_id})")
-        analysis = get_insights_from_gpt(tweet_id, tweet_text)
-        if analysis and save_to_json(analysis):
-            success_count += 1
-            print(f"Successfully processed tweet {tweet_id}")
-        else:
-            print(f"Failed to process tweet {tweet_id}")
+    print(f"\n🤖 Starting Gemini AI analysis...")
+    
+    # Create progress bar
+    with tqdm(total=len(tweets), desc="Analyzing tweets", unit="tweet") as pbar:
+        for i, (tweet_id, tweet_text) in enumerate(tweets, 1):
+            pbar.set_description(f"Analyzing tweet {tweet_id}")
+            
+            analysis = get_insights_from_gemini(tweet_id, tweet_text)
+            if analysis and save_to_json(analysis):
+                success_count += 1
+                pbar.set_postfix({"Success": success_count, "Failed": i - success_count})
+            else:
+                pbar.set_postfix({"Success": success_count, "Failed": i - success_count})
+            
+            pbar.update(1)
+            
+            # Add delay to avoid rate limiting (4 seconds between requests)
+            if i < len(tweets):  # Don't delay after the last tweet
+                pbar.set_description("Waiting for rate limit...")
+                time.sleep(4)
     
     print(f"\nSummary: Successfully analyzed {success_count} out of {len(tweets)} tweets")
     
