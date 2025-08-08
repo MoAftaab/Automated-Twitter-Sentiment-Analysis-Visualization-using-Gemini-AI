@@ -29,20 +29,30 @@ env/
 # Environment variables and config
 .env
 .env.*
+api_keys.env
 secrets.json
 credentials.json
 api_keys.json
 config.ini
+credentials.ini
 
 # Twitter cookies
 cookies.json
 *.token
 *.session
 
-# Data files
-*.csv
-*.json
-*.png
+# Data files (exclude generated files but allow sample data)
+01_tweets_*.csv
+02_cleaned_tweets*.csv
+03_sentiment_labels.csv
+04_data_analysis.csv
+05_sentiment_analysis.png
+gpt_analysis.json
+test_*.csv
+
+# Allow sample/example files
+!sample_dataset.csv
+!*example*
 *.jpg
 *.jpeg
 *.gif
