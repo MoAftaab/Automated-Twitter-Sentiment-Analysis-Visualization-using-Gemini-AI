@@ -6,7 +6,7 @@ import asyncio  # Add this import
 async def authenticate():
     #* login credentials
     config = ConfigParser()
-    config.read('config.ini')
+    config.read('credentials.ini')
     username = config['X']['username']
     email = config['X']['email']
     password = config['X']['password']

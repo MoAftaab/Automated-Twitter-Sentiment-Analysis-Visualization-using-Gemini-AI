@@ -6,7 +6,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import glob
 
-load_dotenv()  # This loads the variables from .env file
+load_dotenv(dotenv_path='api_keys.env')  # This loads the variables from a custom .env file
 
 def install_requirements():
     """Install required packages"""
@@ -63,7 +63,7 @@ def check_file_exists(filename_pattern, step_name):
 
 def check_env_variables():
     """Check if required environment variables are set"""
-    required_vars = ['OPENAI_API_KEY']
+    required_vars = ['GEMINI_API_KEY']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
@@ -88,11 +88,19 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     print(f"Starting workflow run at {timestamp}")
     
+    # Show workflow mode
+    if args.start_step == 1:
+        print("\n🔄 MODE: Scraping fresh Twitter data + Gemini AI analysis")
+        print("This will scrape live tweets and analyze them with Gemini AI")
+    else:
+        print(f"\n🔄 MODE: Using pre-saved data + Gemini AI analysis (starting from step {args.start_step})")
+        print("This will use existing tweet data and analyze with Gemini AI")
+    
     # Define workflow steps with their expected output patterns
     workflow_steps = [
         ("Twitter Scraping", "01_scrape_tweets.py", "01_tweets_*.csv"),
         ("Tweet Cleaning", "02_clean_tweets.py", "02_cleaned_tweets.csv"),
-        ("GPT Analysis", "03_analyze_sentiment.py", "03_sentiment_labels.csv"),
+        ("Gemini AI Analysis", "03_analyze_sentiment.py", "03_sentiment_labels.csv"),
         ("Data Analysis", "04_create_analysis.py", "04_data_analysis.csv"),
         ("Data Visualization", "05_generate_visualization.py", "05_sentiment_analysis.png")
     ]
